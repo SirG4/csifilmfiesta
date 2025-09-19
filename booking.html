@@ -373,8 +373,8 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <img src="assets/film_fiesta_logo.png" alt="Film Fiesta Logo" class="logo">
-        <button class="login-btn">Login</button>
+        <img src="assets/film_fiesta_logo.png" alt="Film Fiesta Logo" class="logo" id="nav-logo">
+        <button class="login-btn" id="auth-btn">Login</button>
     </nav>
 
     <!-- Main Booking Content -->
@@ -439,6 +439,8 @@
             <div class="booking-summary">
                 <h3 class="summary-title">Booking Summary</h3>
                 <div class="selected-seats" id="selected-seats">No seats selected</div>
+                <div class="selected-seats" id="analytics">Loading seat analytics...</div>
+                <div class="selected-seats" id="occupied-seats">Occupied seats: loading...</div>
                 <button class="confirm-btn">Confirm Booking</button>
             </div>
         </div>
@@ -464,6 +466,7 @@
         </p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
     <script>
         // Navbar background change on scroll
         window.addEventListener('scroll', function() {
@@ -475,64 +478,91 @@
             }
         });
 
-        // Simple navigation for buttons
-        document.querySelector('.login-btn').addEventListener('click', function() {
-            alert('Login functionality would go here');
-        });
+        // Supabase config (must match index.html)
+        const SUPABASE_URL = 'https://ccjtxsyfgrdbseiiovur.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjanR4c3lmZ3JkYnNlaWlvdnVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MTY1NDQsImV4cCI6MjA3MTI5MjU0NH0.y9cDGV_6nGeBpPps_GXKC_Dt0790v56RkaZ89oT3oiQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Generate seat map
-        const seatMap = document.getElementById('seat-map');
-        const rows = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
-        const cols = 17;
-        
-        // Create column header row
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'row-label';
-        emptyCell.textContent = '';
-        seatMap.appendChild(emptyCell);
-        
-        // Add column numbers 1-17
-        for (let c = 1; c <= cols; c++) {
-            const colLabel = document.createElement('div');
-            colLabel.className = 'row-label';
-            colLabel.textContent = c;
-            seatMap.appendChild(colLabel);
+        const authBtn = document.getElementById('auth-btn');
+        const logo = document.getElementById('nav-logo');
+
+        // Logo navigation
+        logo.addEventListener('click', () => { window.location.href = 'index.html'; });
+
+        function getLocalProfile() {
+            try { return JSON.parse(localStorage.getItem('ff_user')) || null; } catch { return null; }
         }
-        
-        // Create seats for each row
-        for (let r = 0; r < rows.length; r++) {
-            // Row label
-            const rowLabel = document.createElement('div');
-            rowLabel.className = 'row-label';
-            rowLabel.textContent = rows[r];
-            seatMap.appendChild(rowLabel);
-            
-            // Seats for this row (1-17)
-            for (let c = 1; c <= cols; c++) {
-                const seat = document.createElement('button');
-                seat.className = 'seat';
-                seat.dataset.row = rows[r];
-                seat.dataset.col = c;
-                seat.dataset.seat = `${rows[r]}${c}`;
-                seat.textContent = c;
 
-                // Randomly make some seats occupied (20% chance)
-                if (Math.random() < 0.2) {
-                    seat.classList.add('occupied');
-                    seat.disabled = true;
+        async function renderProfile() {
+            const { data: { user } } = await supabase.auth.getUser();
+            const local = getLocalProfile();
+            if (!user && !local) {
+                authBtn.textContent = 'Login';
+                authBtn.onclick = () => window.location.href = 'index.html';
+                return;
+            }
+            const phone = (user && user.phone) || (local && local.phone) || '';
+            const email = (user && user.user_metadata && user.user_metadata.email) || (local && local.email) || '';
+            const name = (local && local.name) || '';
+            const avatarUrl = (local && local.avatarUrl) || 'assets/profile.png';
+            authBtn.innerHTML = `<img src="${avatarUrl}" alt="pfp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;border:1px solid #333;"/><span style="margin-right:8px;">${name || email || phone}</span><span style="opacity:.8;">Sign out</span>`;
+            authBtn.onclick = async () => {
+                await supabase.auth.signOut();
+                localStorage.removeItem('ff_user');
+                await renderProfile();
+            };
+        }
+        renderProfile();
+
+        // Configurable seat map
+        const seatMap = document.getElementById('seat-map');
+        const MOVIE_ID = 'Jojo Rabbit';
+        const NUM_ROWS = 9; // scalable: increase to add more rows
+        const NUM_COLS = 17; // scalable: increase to add more columns
+
+        function rowLabels(n) { return Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i)); }
+        const rows = rowLabels(NUM_ROWS);
+
+        function buildSeatMap() {
+            seatMap.innerHTML = '';
+            // column header
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'row-label';
+            emptyCell.textContent = '';
+            seatMap.appendChild(emptyCell);
+            for (let c = 1; c <= NUM_COLS; c++) {
+                const colLabel = document.createElement('div');
+                colLabel.className = 'row-label';
+                colLabel.textContent = c;
+                seatMap.appendChild(colLabel);
+            }
+            // rows
+            for (let r = 0; r < rows.length; r++) {
+                const rowLabel = document.createElement('div');
+                rowLabel.className = 'row-label';
+                rowLabel.textContent = rows[r];
+                seatMap.appendChild(rowLabel);
+                for (let c = 1; c <= NUM_COLS; c++) {
+                    const seat = document.createElement('button');
+                    seat.className = 'seat';
+                    seat.dataset.row = rows[r];
+                    seat.dataset.col = c;
+                    seat.dataset.seat = `${rows[r]}${c}`;
+                    seat.textContent = c;
+                    seat.addEventListener('click', toggleSeatSelection);
+                    seatMap.appendChild(seat);
                 }
-
-                seat.addEventListener('click', toggleSeatSelection);
-                seatMap.appendChild(seat);
             }
         }
+        buildSeatMap();
         
         // Toggle seat selection
         function toggleSeatSelection(e) {
             const seat = e.target;
             if (seat.classList.contains('occupied')) return;
-            
-            seat.classList.toggle('selected');
+            // allow only one selected at a time
+            document.querySelectorAll('.seat.selected').forEach(s => s.classList.remove('selected'));
+            seat.classList.add('selected');
             updateBookingSummary();
         }
         
@@ -549,16 +579,158 @@
             const seatNumbers = Array.from(selectedSeats).map(seat => seat.dataset.seat);
             selectedSeatsElement.textContent = `Selected: ${seatNumbers.join(', ')}`;
         }
+
+        function updateAnalytics(total, booked, available, mySeat) {
+            const analytics = document.getElementById('analytics');
+            const mySeatText = mySeat ? `Your seat: ${mySeat}` : 'Your seat: Not booked yet';
+            analytics.textContent = `Total: ${total} | Booked: ${booked} | Available: ${available} | ${mySeatText}`;
+        }
+        function updateOccupiedList(seatList) {
+            const el = document.getElementById('occupied-seats');
+            if (!seatList || seatList.length === 0) {
+                el.textContent = 'Occupied seats: None';
+                return;
+            }
+            el.textContent = 'Occupied seats: ' + seatList.join(', ');
+        }
         
+        // Load occupied seats from Supabase
+        async function loadOccupiedSeats() {
+            try {
+                const { data, error } = await supabase
+                    .from('booking')
+                    .select('user_id, seat_no')
+                    .eq('movie', MOVIE_ID)
+                    .not('seat_no', 'is', null);
+                if (error) throw error;
+                const { data: authData } = await supabase.auth.getUser();
+                const currentUserId = authData && authData.user ? authData.user.id : null;
+                const taken = new Set();
+                const takenList = [];
+                (data || []).forEach(row => { if (row.seat_no) { taken.add(row.seat_no); takenList.push(row.seat_no); } });
+                console.log('Booked seats from Supabase:', takenList.slice().sort());
+                // mark occupied (by others)
+                document.querySelectorAll('.seat').forEach(btn => {
+                    const code = btn.dataset.seat;
+                    if (taken.has(code)) {
+                        btn.classList.add('occupied');
+                        btn.disabled = true;
+                    } else {
+                        btn.classList.remove('occupied');
+                        btn.disabled = false;
+                    }
+                });
+                // Load and show current user's seat as selected (if exists)
+                if (currentUserId) {
+                    const { data: myRows } = await supabase
+                        .from('booking')
+                        .select('seat_no')
+                        .eq('user_id', currentUserId)
+                        .eq('movie', MOVIE_ID)
+                        .limit(1)
+                        .maybeSingle();
+                    const mySeat = myRows && myRows.seat_no ? myRows.seat_no : null;
+                    if (mySeat) {
+                        // Highlight current user's seat in green and disable other seats
+                        const myBtn = document.querySelector(`.seat[data-seat="${mySeat}"]`);
+                        if (myBtn) {
+                            myBtn.classList.remove('occupied');
+                            myBtn.disabled = false;
+                            myBtn.classList.add('selected');
+                        }
+                        document.querySelectorAll('.seat').forEach(b => {
+                            if (b.dataset.seat !== mySeat) { b.disabled = true; }
+                        });
+                        updateAnalytics(NUM_ROWS * NUM_COLS, taken.size, (NUM_ROWS * NUM_COLS) - taken.size, mySeat);
+                        updateOccupiedList(takenList.sort());
+                        updateBookingSummary();
+                        return;
+                    }
+                }
+                updateAnalytics(NUM_ROWS * NUM_COLS, taken.size, (NUM_ROWS * NUM_COLS) - taken.size, null);
+                updateOccupiedList(takenList.sort());
+                updateBookingSummary();
+            } catch (e) {
+                console.warn('Failed to load occupied seats:', e);
+            }
+        }
+        loadOccupiedSeats();
+
         // Confirm booking button
-        document.querySelector('.confirm-btn').addEventListener('click', function() {
+        document.querySelector('.confirm-btn').addEventListener('click', async function() {
             const selectedSeats = document.querySelectorAll('.seat.selected');
             if (selectedSeats.length === 0) {
                 alert('Please select at least one seat to continue.');
                 return;
             }
-            
-            alert('Booking confirmed! In a real implementation, this would process your booking.');
+            const seatCode = selectedSeats[0].dataset.seat;
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert('Please login first. Redirecting to home to sign in.');
+                window.location.href = 'index.html';
+                return;
+            }
+            const local = getLocalProfile();
+            const full_name = (local && local.name) || '';
+            const email = (local && local.email) || user.email || '';
+            const phone = (local && local.phone) || '';
+            try {
+                // Block if the current user already has a seat for this movie
+                const { data: existing } = await supabase
+                    .from('booking')
+                    .select('id, seat_no')
+                    .eq('user_id', user.id)
+                    .eq('movie', MOVIE_ID)
+                    .not('seat_no', 'is', null)
+                    .limit(1)
+                    .maybeSingle();
+                if (existing && existing.seat_no) {
+                    alert('Booking has already been done for this account. Each email can book only 1 seat.');
+                    return;
+                }
+
+                // Ensure seat is still available
+                const { data: seatOwner } = await supabase
+                    .from('booking')
+                    .select('user_id')
+                    .eq('movie', MOVIE_ID)
+                    .eq('seat_no', seatCode)
+                    .limit(1)
+                    .maybeSingle();
+                if (seatOwner && seatOwner.user_id && seatOwner.user_id !== user.id) {
+                    alert('Seat just got taken. Please choose another seat.');
+                    await loadOccupiedSeats();
+                    return;
+                }
+
+                // Upsert by (user_id, movie) to store the first seat selection
+                const { error: upsertError } = await supabase
+                    .from('booking')
+                    .upsert({
+                        user_id: user.id,
+                        movie: MOVIE_ID,
+                        full_name,
+                        email,
+                        phone,
+                        seat_no: seatCode
+                    }, { onConflict: 'user_id,movie' });
+                if (upsertError) throw upsertError;
+
+                alert('🎉 Booking saved!');
+                await loadOccupiedSeats();
+            } catch (e) {
+                console.error('Booking insert failed:', e);
+                let hint = '';
+                const msg = (e.message || '').toLowerCase();
+                if (msg.includes('permission') || msg.includes('rls')) {
+                    hint = '\nHint: Ensure an INSERT policy exists on table booking with check auth.uid() = user_id.';
+                } else if (msg.includes('not found') || msg.includes('schema') || msg.includes('cache')) {
+                    hint = '\nHint: Ensure table public.booking exists and schema cache refreshed.';
+                } else if (msg.includes('column') && msg.includes('seat')) {
+                    hint = '\nHint: Add column seat_no text to the booking table.';
+                }
+                alert('Failed to save booking: ' + (e.message || 'Unknown error') + hint);
+            }
         });
     </script>
 </body>

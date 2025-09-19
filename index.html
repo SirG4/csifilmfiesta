@@ -61,6 +61,67 @@
             background-color: #f40612;
         }
 
+        /* Auth Modal */
+        .auth-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .auth-modal-backdrop.show {
+            display: flex;
+        }
+        .auth-modal {
+            width: 100%;
+            max-width: 420px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+        .auth-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #222;
+            font-weight: bold;
+        }
+        .auth-body { padding: 16px 20px; }
+        .auth-field { margin-bottom: 12px; }
+        .auth-field label { display: block; font-size: 0.9rem; color: #bbb; margin-bottom: 6px; }
+        .auth-field input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            background: #0b0b0b;
+            color: #fff;
+        }
+        .auth-profile-preview { display:none; }
+        .auth-actions { margin-top: 12px; display: flex; gap: 10px; }
+        .auth-primary {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .auth-secondary {
+            background: transparent;
+            color: #bbb;
+            border: 1px solid #333;
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .auth-hint { font-size: 0.85rem; color: #aaa; margin-top: 6px; }
+        .auth-error { color: #ff6b6b; font-size: 0.9rem; margin-top: 8px; }
+        .auth-success { color: #22c55e; font-size: 0.9rem; margin-top: 8px; }
+
         /* Hero Section Styles - Improved Responsiveness */
         .hero {
             height: 100vh;
@@ -361,7 +422,7 @@
     <!-- Navbar -->
     <nav class="navbar">
         <img src="assets/film_fiesta_logo.png" alt="Film Fiesta Logo" class="logo">
-        <button class="login-btn">Login</button>
+        <button class="login-btn" id="auth-btn">Login</button>
     </nav>
 
     <!-- Hero Section -->
@@ -443,6 +504,42 @@
         </p>
     </footer>
 
+    <!-- Auth Modal -->
+    <div class="auth-modal-backdrop" id="auth-backdrop" aria-hidden="true">
+        <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+            <div class="auth-header" id="auth-title">Sign in with Email & Password</div>
+            <div class="auth-body">
+                <div id="step-auth">
+                    <div class="auth-field">
+                        <label for="auth-email">Email</label>
+                        <input id="auth-email" type="email" placeholder="you@example.com" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="auth-password">Password</label>
+                        <input id="auth-password" type="password" placeholder="Your password" minlength="6" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="auth-name">Full Name</label>
+                        <input id="auth-name" type="text" placeholder="Your full name" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="auth-phone">Mobile Phone</label>
+                        <input id="auth-phone" type="tel" placeholder="e.g. +91XXXXXXXXXX or 9876543210" pattern="^[+]?\d{8,15}$|^\d{8,15}$" required>
+                    </div>
+                    <div class="auth-actions">
+                        <button class="auth-primary" id="signup-btn">Sign Up</button>
+                        <button class="auth-secondary" id="login-btn">Login</button>
+                        <button class="auth-secondary" id="auth-cancel-btn">Cancel</button>
+                    </div>
+                    <div class="auth-success" id="auth-info" style="display:none;"></div>
+                    <div class="auth-error" id="auth-error" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
     <script>
         // Navbar background change on scroll
         window.addEventListener('scroll', function() {
@@ -454,12 +551,193 @@
             }
         });
 
-        // Simple navigation for buttons
-        document.querySelector('.login-btn').addEventListener('click', function() {
-            alert('Login functionality would go here');
+        // Supabase config (replace with your credentials)
+        const SUPABASE_URL = 'https://ccjtxsyfgrdbseiiovur.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjanR4c3lmZ3JkYnNlaWlvdnVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MTY1NDQsImV4cCI6MjA3MTI5MjU0NH0.y9cDGV_6nGeBpPps_GXKC_Dt0790v56RkaZ89oT3oiQ';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Warn if demo credentials are still in use
+        if (SUPABASE_URL.includes('ccjtxsyfgrdbseiiovur')) {
+            console.warn('Replace SUPABASE_URL and SUPABASE_ANON_KEY with your own project credentials.');
+        }
+
+        // Elements
+        const authBtn = document.getElementById('auth-btn');
+        const backdrop = document.getElementById('auth-backdrop');
+        // Auth modal elements
+        const emailInput = document.getElementById('auth-email');
+        const passwordInput = document.getElementById('auth-password');
+        const nameInput = document.getElementById('auth-name');
+        const phoneInput = document.getElementById('auth-phone');
+        const signupBtn = document.getElementById('signup-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const cancelBtn = document.getElementById('auth-cancel-btn');
+        const authError = document.getElementById('auth-error');
+        const authInfo = document.getElementById('auth-info');
+
+        let pendingBook = false; // used only to redirect to booking.html after auth
+
+        // Logo navigation
+        document.querySelector('.logo').addEventListener('click', function() {
+            window.location.href = 'index.html';
         });
 
-        document.querySelector('.book-btn').addEventListener('click', function() {
+        function openAuth() {
+            backdrop.classList.add('show');
+            authError.style.display = 'none';
+            authInfo.style.display = 'none';
+        }
+        function closeAuth() {
+            backdrop.classList.remove('show');
+            emailInput.value = '';
+            passwordInput.value = '';
+            nameInput.value = '';
+            phoneInput.value = '';
+        }
+
+        function getLocalProfile() {
+            try { return JSON.parse(localStorage.getItem('ff_user')) || null; } catch { return null; }
+        }
+
+        function setLocalProfile(profile) {
+            localStorage.setItem('ff_user', JSON.stringify(profile));
+        }
+
+        async function renderProfileIfLoggedIn() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                authBtn.textContent = 'Login';
+                authBtn.onclick = openAuth;
+                return;
+            }
+            const local = getLocalProfile();
+            const phone = (local && local.phone) || '';
+            const savedEmail = user.email || (local && local.email) || '';
+            const fullName = (local && local.name) || '';
+            authBtn.innerHTML = `<span style="margin-right:8px;">${fullName || savedEmail}</span><span style="opacity:.8;">Sign out</span>`;
+            authBtn.onclick = async () => {
+                await supabase.auth.signOut();
+                localStorage.removeItem('ff_user');
+                await renderProfileIfLoggedIn();
+            };
+        }
+
+        authBtn.addEventListener('click', openAuth);
+        cancelBtn.addEventListener('click', closeAuth);
+
+        async function insertProfileBookingRowOnce() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const local = getLocalProfile() || {};
+            const full_name = local.name || '';
+            const email = local.email || user.email || '';
+            const phone = local.phone || '';
+            try {
+                // Skip if a row already exists for this user
+                const { data: existing, error: selectError } = await supabase
+                    .from('booking')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .limit(1);
+                if (selectError) throw selectError;
+                if (existing && existing.length > 0) {
+                    console.log('Profile booking row already exists, skipping insert');
+                    return;
+                }
+                const { error } = await supabase.from('booking').insert([{ user_id: user.id, full_name, email, phone, movie: 'Jojo Rabbit' }]);
+                if (error) throw error;
+                console.log('Profile booking row inserted');
+            } catch (e) {
+                console.warn('Profile booking insert failed:', e?.message || e);
+            }
+        }
+
+        signupBtn.addEventListener('click', async () => {
+            authError.style.display = 'none';
+            authInfo.style.display = 'none';
+            const email = (emailInput.value || '').trim();
+            const password = (passwordInput.value || '').trim();
+            const name = (nameInput.value || '').trim();
+            const phone = (phoneInput.value || '').trim();
+            if (!email || !password || !name || !phone) {
+                authError.textContent = 'Email, password, full name, and mobile phone are required';
+                authError.style.display = 'block';
+                return;
+            }
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { name, phone } }
+                });
+                if (error) throw error;
+                // If email confirmations are enabled, there may be no active session
+                const { data: afterSignup } = await supabase.auth.getUser();
+                if (!afterSignup || !afterSignup.user) {
+                    authInfo.textContent = 'Account created. Please verify your email or disable confirmations in Supabase Auth settings.';
+                    authInfo.style.display = 'block';
+                    return;
+                }
+                setLocalProfile({ email, name, phone });
+                authInfo.textContent = 'Account created and signed in.';
+                authInfo.style.display = 'block';
+                await renderProfileIfLoggedIn();
+                // Do not insert into booking at signup; booking happens only when selecting a seat
+                closeAuth();
+                if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
+            } catch (e) {
+                authError.textContent = e.message || 'Failed to sign up';
+                authError.style.display = 'block';
+            }
+        });
+
+        loginBtn.addEventListener('click', async () => {
+            authError.style.display = 'none';
+            authInfo.style.display = 'none';
+            const email = (emailInput.value || '').trim();
+            const password = (passwordInput.value || '').trim();
+            const name = (nameInput.value || '').trim();
+            const phone = (phoneInput.value || '').trim();
+            if (!email || !password) {
+                authError.textContent = 'Email and password are required';
+                authError.style.display = 'block';
+                return;
+            }
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                // Optionally update missing metadata
+                await supabase.auth.updateUser({ data: { name: name || undefined, phone: phone || undefined } });
+                const { data: afterLogin } = await supabase.auth.getUser();
+                if (!afterLogin || !afterLogin.user) {
+                    authError.textContent = 'Login succeeded but no session found. Check your domain auth settings and URL used to open this page.';
+                    authError.style.display = 'block';
+                    return;
+                }
+                setLocalProfile({ email, name, phone });
+                await renderProfileIfLoggedIn();
+                if (email.toLowerCase() === 'admin@gmail.com' && password === '123456') {
+                    closeAuth();
+                    window.location.href = 'admin.html';
+                    return;
+                }
+                // Do not insert on login; only at signup
+                closeAuth();
+                if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
+            } catch (e) {
+                authError.textContent = e.message || 'Failed to login';
+                authError.style.display = 'block';
+            }
+        });
+
+        // Initial state
+        renderProfileIfLoggedIn();
+
+        // No DB insert on this page. Only redirect to the seat booking page
+
+        document.querySelector('.book-btn').addEventListener('click', async function() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) { pendingBook = true; openAuth(); return; }
             window.location.href = 'booking.html';
         });
 
