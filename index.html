@@ -122,6 +122,12 @@
         .auth-error { color: #ff6b6b; font-size: 0.9rem; margin-top: 8px; }
         .auth-success { color: #22c55e; font-size: 0.9rem; margin-top: 8px; }
 
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; display:flex; flex-direction:column; gap:8px; }
+        .toast { min-width: 240px; max-width: 90vw; background:#111; color:#fff; border:1px solid #333; padding:12px 14px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,.5); font-size:.95rem; }
+        .toast.success { border-color:#14532d; background:#0d1f18; color:#86efac; }
+        .toast.error { border-color:#7f1d1d; background:#1a0f0f; color:#fca5a5; }
+
         /* Hero Section Styles - Improved Responsiveness */
         .hero {
             height: 100vh;
@@ -512,7 +518,7 @@
                 <div id="step-auth">
                     <div class="auth-field">
                         <label for="auth-email">Email</label>
-                        <input id="auth-email" type="email" placeholder="you@example.com" required>
+                        <input id="auth-email" type="email" placeholder="you@gmail.com" pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$" title="Please enter a valid Gmail address (e.g., you@gmail.com)" required>
                     </div>
                     <div class="auth-field">
                         <label for="auth-password">Password</label>
@@ -541,6 +547,17 @@
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
     <script>
+        // Toast helpers
+        const toastRoot = document.createElement('div');
+        toastRoot.className = 'toast-container';
+        document.body.appendChild(toastRoot);
+        function showToast(message, type = 'success', timeoutMs = 2400) {
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.textContent = message;
+            toastRoot.appendChild(el);
+            setTimeout(() => { el.remove(); }, timeoutMs);
+        }
         // Navbar background change on scroll
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');
@@ -660,8 +677,7 @@
             const name = (nameInput.value || '').trim();
             const phone = (phoneInput.value || '').trim();
             if (!email || !password || !name || !phone) {
-                authError.textContent = 'Email, password, full name, and mobile phone are required';
-                authError.style.display = 'block';
+                showToast('Email, password, full name, and mobile phone are required', 'error');
                 return;
             }
             try {
@@ -674,20 +690,17 @@
                 // If email confirmations are enabled, there may be no active session
                 const { data: afterSignup } = await supabase.auth.getUser();
                 if (!afterSignup || !afterSignup.user) {
-                    authInfo.textContent = 'Account created. Please verify your email or disable confirmations in Supabase Auth settings.';
-                    authInfo.style.display = 'block';
+                    showToast('Account created. Please verify your email or disable confirmations in Supabase.', 'success');
                     return;
                 }
                 setLocalProfile({ email, name, phone });
-                authInfo.textContent = 'Account created and signed in.';
-                authInfo.style.display = 'block';
+                showToast('Account created and signed in.', 'success');
                 await renderProfileIfLoggedIn();
                 // Do not insert into booking at signup; booking happens only when selecting a seat
                 closeAuth();
                 if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
             } catch (e) {
-                authError.textContent = e.message || 'Failed to sign up';
-                authError.style.display = 'block';
+                showToast(e.message || 'Failed to sign up', 'error');
             }
         });
 
@@ -699,8 +712,7 @@
             const name = (nameInput.value || '').trim();
             const phone = (phoneInput.value || '').trim();
             if (!email || !password) {
-                authError.textContent = 'Email and password are required';
-                authError.style.display = 'block';
+                showToast('Email and password are required', 'error');
                 return;
             }
             try {
@@ -710,8 +722,7 @@
                 await supabase.auth.updateUser({ data: { name: name || undefined, phone: phone || undefined } });
                 const { data: afterLogin } = await supabase.auth.getUser();
                 if (!afterLogin || !afterLogin.user) {
-                    authError.textContent = 'Login succeeded but no session found. Check your domain auth settings and URL used to open this page.';
-                    authError.style.display = 'block';
+                    showToast('Login succeeded but no session found. Check auth settings.', 'error');
                     return;
                 }
                 setLocalProfile({ email, name, phone });
@@ -725,8 +736,7 @@
                 closeAuth();
                 if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
             } catch (e) {
-                authError.textContent = e.message || 'Failed to login';
-                authError.style.display = 'block';
+                showToast(e.message || 'Failed to login', 'error');
             }
         });
 

@@ -279,6 +279,12 @@
             background-color: #f40612;
         }
 
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; display:flex; flex-direction:column; gap:8px; }
+        .toast { min-width: 240px; max-width: 90vw; background:#111; color:#fff; border:1px solid #333; padding:12px 14px; border-radius:10px; box-shadow:0 8px 20px rgba(0,0,0,.5); font-size:.95rem; }
+        .toast.success { border-color:#14532d; background:#0d1f18; color:#86efac; }
+        .toast.error { border-color:#7f1d1d; background:#1a0f0f; color:#fca5a5; }
+
         /* Footer Styles */
         footer {
             background-color: #0c0c0c;
@@ -468,6 +474,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
     <script>
+        // Toast helpers
+        const toastRoot = document.createElement('div');
+        toastRoot.className = 'toast-container';
+        document.body.appendChild(toastRoot);
+        function showToast(message, type = 'success', timeoutMs = 2400) {
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.textContent = message;
+            toastRoot.appendChild(el);
+            setTimeout(() => { el.remove(); }, timeoutMs);
+        }
         // Navbar background change on scroll
         window.addEventListener('scroll', function() {
             const navbar = document.querySelector('.navbar');
@@ -660,13 +677,13 @@
         document.querySelector('.confirm-btn').addEventListener('click', async function() {
             const selectedSeats = document.querySelectorAll('.seat.selected');
             if (selectedSeats.length === 0) {
-                alert('Please select at least one seat to continue.');
+                showToast('Please select at least one seat to continue.', 'error');
                 return;
             }
             const seatCode = selectedSeats[0].dataset.seat;
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                alert('Please login first. Redirecting to home to sign in.');
+                showToast('Please login first. Redirecting to home to sign in.', 'error');
                 window.location.href = 'index.html';
                 return;
             }
@@ -685,7 +702,7 @@
                     .limit(1)
                     .maybeSingle();
                 if (existing && existing.seat_no) {
-                    alert('Booking has already been done for this account. Each email can book only 1 seat.');
+                    showToast('Booking has already been done for this account. Each email can book only 1 seat.', 'error');
                     return;
                 }
 
@@ -698,7 +715,7 @@
                     .limit(1)
                     .maybeSingle();
                 if (seatOwner && seatOwner.user_id && seatOwner.user_id !== user.id) {
-                    alert('Seat just got taken. Please choose another seat.');
+                    showToast('Seat just got taken. Please choose another seat.', 'error');
                     await loadOccupiedSeats();
                     return;
                 }
@@ -716,7 +733,7 @@
                     }, { onConflict: 'user_id,movie' });
                 if (upsertError) throw upsertError;
 
-                alert('🎉 Booking saved!');
+                showToast('🎉 Booking saved!', 'success');
                 await loadOccupiedSeats();
             } catch (e) {
                 console.error('Booking insert failed:', e);
@@ -729,7 +746,7 @@
                 } else if (msg.includes('column') && msg.includes('seat')) {
                     hint = '\nHint: Add column seat_no text to the booking table.';
                 }
-                alert('Failed to save booking: ' + (e.message || 'Unknown error') + hint);
+                showToast('Failed to save booking: ' + (e.message || 'Unknown error') + hint, 'error');
             }
         });
     </script>
