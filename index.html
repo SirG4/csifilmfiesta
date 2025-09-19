@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSI Film Fiesta</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            color: #fff;
+            overflow-x: hidden;
+            background-color: #000; /* Added as fallback */
+        }
+
+        /* Navbar Styles - Improved Responsiveness */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            transition: background-color 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background-color: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo {
+            height: 40px;
+            max-width: 180px;
+        }
+
+        .login-btn {
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        .login-btn:hover {
+            background-color: #f40612;
+        }
+
+        /* Hero Section Styles - Improved Responsiveness */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('assets/herobg.jpg') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            text-align: left;
+        }
+
+        .hero-content {
+            padding-top: 200px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .movie-logo {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px;
+            margin-bottom: 15px;
+        }
+
+        .movie-info {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+
+        .genre-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .genre-tag {
+            background: rgba(229, 9, 20, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .movie-description {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        .book-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #e50914;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .book-btn:hover {
+            background-color: #f40612;
+            gap: 15px;
+        }
+
+        /* Trailer Section - Improved Responsiveness */
+        .trailer-section {
+          background-color: #050505;
+          padding: 50px 2%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .section-title {
+          font-size: 2rem;
+          margin-bottom: 40px;
+          text-align: center;
+          color: #e50914;
+          position: relative;
+          padding-bottom: 15px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .section-title::after {
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 80px;
+          height: 3px;
+          background-color: #e50914;
+        }
+
+        .video-container {
+          position: relative;
+          width: 100%;
+          border-radius: 10px;
+          overflow: hidden;
+          box-shadow: 0 10px 25px rgba(229, 9, 20, 0.3);
+        }
+
+        .video-wrapper {
+          position: relative;
+          padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+          height: 0;
+        }
+
+        .video-wrapper iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
+
+        .video-thumbnail {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+        }
+
+        .video-thumbnail img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .play-button {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 70px;
+          height: 70px;
+          background-color: #e50914;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 1.8rem;
+          transition: all 0.3s;
+          opacity: 0.9;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .play-button:hover {
+          transform: translate(-50%, -50%) scale(1.1);
+          background-color: #f40612;
+          opacity: 1;
+        }
+
+        /* Trailer caption */
+        .trailer-caption {
+          margin-top: 25px;
+          text-align: center;
+          color: #ccc;
+          font-size: 1rem;
+          max-width: 800px;
+          line-height: 1.5;
+        }
+
+        /* Footer Styles - Improved Responsiveness */
+        footer {
+            background-color: #0c0c0c;
+            padding: 40px 5%;
+            text-align: center;
+        }
+
+        .contact-info {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-info h3 {
+            margin-bottom: 20px;
+            color: #e50914;
+            font-size: 1.5rem;
+        }
+
+        .contact-details {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .creation-credit {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #797878;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 4%;
+            }
+            
+            .logo {
+                height: 35px;
+            }
+            
+            .hero {
+                padding: 0 4%;
+                text-align: center;
+                justify-content: center;
+            }
+            
+            .hero-content {
+                text-align: center;
+                padding: 0 10px;
+                padding-top: 80px;
+            }
+
+            .movie-description {
+                font-size: 0.70rem;
+            }
+
+            .movie-info{
+                font-size: 0.70rem;
+            }
+            
+            .movie-info {
+                justify-content: center;
+                gap: 12px;
+            }
+            
+            .movie-logo {
+                max-height: 100px;
+                margin: 0 auto 15px;
+            }
+            
+            .contact-details {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .trailer-section {
+                padding: 60px 4%;
+            }
+
+            .section-title {
+                font-size: 1.6rem;
+                margin-bottom: 30px;
+            }
+
+            .video-container {
+                border-radius: 8px;
+            }
+
+            .play-button {
+                width: 60px;
+                height: 60px;
+                font-size: 1.4rem;
+            }
+            
+            .trailer-caption {
+                font-size: 0.9rem;
+                padding: 0 10px;
+            }
+            
+            .book-btn {
+                margin: 0 auto;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <img src="assets/film_fiesta_logo.png" alt="Film Fiesta Logo" class="logo">
+        <button class="login-btn">Login</button>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <img src="assets/jojo_logo.jpg" alt="Jojo Rabbit" class="movie-logo">
+            <div class="movie-info">
+                <div class="genre-tags">
+                    <span class="genre-tag">Action</span>
+                    <span class="genre-tag">Satire</span>
+                    <span class="genre-tag">Drama</span>
+                </div>
+                <div class="info-item">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>2019</span>
+                </div>
+                <div class="info-item">
+                    <i class="far fa-clock"></i>
+                    <span>1h 48m</span>
+                </div>
+            </div>
+            <p class="movie-description">
+                A young German boy in the Hitler Youth, whose hero and imaginary friend is the country's dictator, 
+                is shocked to discover that his mother is hiding a Jewish girl in their home.
+            </p>
+            <button class="book-btn">
+                Book Tickets
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- Trailer Section - IMPROVED -->
+    <section class="trailer-section">
+      <div class="container">
+        <h2 class="section-title">Official Trailer</h2>
+        <div class="video-container">
+          <div class="video-wrapper">
+            <!-- YouTube iframe (initially hidden) -->
+            <iframe 
+              id="youtube-video"
+              src="about:blank" 
+              frameborder="0" 
+              style="display: none;">
+            </iframe>
+            
+            <!-- Thumbnail with play button (initially visible) -->
+            <div class="video-thumbnail" id="video-thumbnail">
+              <img src="https://i.ytimg.com/vi/tL4McUzXfFI/maxresdefault.jpg" alt="Jojo Rabbit Trailer">
+              <div class="play-button">
+                <i class="fas fa-play"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="trailer-caption">
+          Watch the official trailer for Jojo Rabbit, a satirical comedy that won the Academy Award for Best Adapted Screenplay.
+        </p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="contact-info">
+            <h3>Contact Us</h3>
+            <div class="contact-details">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <span>+1 (555) 123-4567</span>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <span>support@filmfiesta.com</span>
+                </div>
+            </div>
+        </div>
+        <p class="creation-credit">
+            Created by CSIVIT Tech Team.
+        </p>
+    </footer>
+
+    <script>
+        // Navbar background change on scroll
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Simple navigation for buttons
+        document.querySelector('.login-btn').addEventListener('click', function() {
+            alert('Login functionality would go here');
+        });
+
+        document.querySelector('.book-btn').addEventListener('click', function() {
+            window.location.href = 'booking.html';
+        });
+
+        // YouTube video functionality
+        document.getElementById('video-thumbnail').addEventListener('click', function() {
+          const videoId = 'tL4McUzXfFI'; // Your YouTube video ID
+          const iframe = document.getElementById('youtube-video');
+          const thumbnail = document.getElementById('video-thumbnail');
+        
+          // Set the iframe source to autoplay the video
+          iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        
+          // Show the iframe and hide the thumbnail
+          iframe.style.display = 'block';
+          thumbnail.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
