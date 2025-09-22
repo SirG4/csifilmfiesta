@@ -74,53 +74,199 @@
         }
         .auth-modal-backdrop.show {
             display: flex;
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .auth-modal {
             width: 100%;
             max-width: 420px;
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            border: 1px solid #333;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
         }
-        .auth-header {
-            padding: 16px 20px;
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Auth Toggle Tabs */
+        .auth-tabs {
+            display: flex;
+            background: #0a0a0a;
             border-bottom: 1px solid #222;
-            font-weight: bold;
         }
-        .auth-body { padding: 16px 20px; }
-        .auth-field { margin-bottom: 12px; }
-        .auth-field label { display: block; font-size: 0.9rem; color: #bbb; margin-bottom: 6px; }
+        
+        .auth-tab {
+            flex: 1;
+            padding: 16px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .auth-tab.active {
+            color: #fff;
+            background: #111;
+        }
+        
+        .auth-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e50914;
+        }
+        
+        .auth-tab:hover:not(.active) {
+            color: #aaa;
+        }
+
+       .auth-body {
+            padding: 24px;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .auth-field {
+            margin-bottom: 16px;
+        }
+        
+        .auth-field label {
+            display: block;
+            font-size: 0.9rem;
+            color: #bbb;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
         .auth-field input {
             width: 100%;
-            padding: 10px 12px;
+            padding: 12px 14px;
             border-radius: 8px;
             border: 1px solid #333;
             background: #0b0b0b;
             color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s;
         }
-        .auth-profile-preview { display:none; }
-        .auth-actions { margin-top: 12px; display: flex; gap: 10px; }
+        
+        .auth-field input:focus {
+            outline: none;
+            border-color: #e50914;
+            background: #141414;
+        }
+        
+        .auth-field input::placeholder {
+            color: #555;
+        }
+        
+        .auth-actions {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
         .auth-primary {
-            background-color: #e50914;
+            background: linear-gradient(135deg, #e50914 0%, #c40812 100%);
             color: white;
             border: none;
-            padding: 10px 14px;
+            padding: 12px 20px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
         }
+        
+        .auth-primary:hover {
+            background: linear-gradient(135deg, #f40612 0%, #e50914 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+        }
+        
         .auth-secondary {
             background: transparent;
-            color: #bbb;
+            color: #999;
             border: 1px solid #333;
-            padding: 10px 14px;
+            padding: 12px 20px;
             border-radius: 8px;
             cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
         }
-        .auth-hint { font-size: 0.85rem; color: #aaa; margin-top: 6px; }
-        .auth-error { color: #ff6b6b; font-size: 0.9rem; margin-top: 8px; }
-        .auth-success { color: #22c55e; font-size: 0.9rem; margin-top: 8px; }
+        
+        .auth-secondary:hover {
+            border-color: #555;
+            color: #bbb;
+        }
+        
+        .auth-divider {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #333;
+        }
+        
+        .auth-divider::before { left: 0; }
+        .auth-divider::after { right: 0; }
+        
+        .auth-message {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .auth-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        .auth-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        
+        .auth-message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
 
         /* Toast */
         .toast-container { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; display:flex; flex-direction:column; gap:8px; }
@@ -131,15 +277,15 @@
         /* Hero Section Styles - Improved Responsiveness */
         .hero {
             height: 100vh;
-            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.7)), url('assets/herobg.jpg') no-repeat center center/cover;
+            background: url('https://m.media-amazon.com/images/S/pv-target-images/9cff7db8df4c6dca8e6c2a341ccec1868ef98a94cafd786cf2bc1b7d76f36715.jpg') no-repeat center center/cover;
             display: flex;
             align-items: center;
-            padding: 0 5%;
+            padding: 0 3.5%;
             text-align: left;
         }
 
         .hero-content {
-            padding-top: 200px;
+            padding-top: 375px;
             max-width: 600px;
             width: 100%;
         }
@@ -157,7 +303,7 @@
             align-items: center;
             gap: 15px;
             margin-bottom: 20px;
-            color: #ccc;
+            color: #574d4d;
         }
 
         .info-item {
@@ -174,16 +320,16 @@
         }
 
         .genre-tag {
-            background: rgba(229, 9, 20, 0.2);
+            background: rgba(229, 9, 20, 0.5);
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 0.85rem;
         }
 
         .movie-description {
-            margin-bottom: 25px;
+            margin-bottom: 22px;
             line-height: 1.6;
-            color: #ccc;
+            color: #574d4d;
             font-size: 1rem;
         }
 
@@ -209,7 +355,7 @@
 
         /* Trailer Section - Improved Responsiveness */
         .trailer-section {
-          background-color: #050505;
+          background: linear-gradient(180deg, #ffffff, #2c2c2c);
           padding: 50px 2%;
           display: flex;
           flex-direction: column;
@@ -313,7 +459,7 @@
 
         /* Footer Styles - Improved Responsiveness */
         footer {
-            background-color: #0c0c0c;
+            background-color: #2c2c2c;
             padding: 40px 5%;
             text-align: center;
         }
@@ -359,6 +505,7 @@
             }
             
             .hero {
+                background: url('assets/ford_mobile.png') no-repeat center center/cover;
                 padding: 0 4%;
                 text-align: center;
                 justify-content: center;
@@ -367,7 +514,7 @@
             .hero-content {
                 text-align: center;
                 padding: 0 10px;
-                padding-top: 80px;
+                padding-top: 71px;
             }
 
             .movie-description {
@@ -393,7 +540,12 @@
                 gap: 15px;
             }
 
+            .contact-item {
+                justify-content: center;
+            }
+
             .trailer-section {
+                background: linear-gradient(180deg, #614124, #2c2c2c);
                 padding: 60px 4%;
             }
 
@@ -434,11 +586,10 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <img src="assets/jojo_logo.jpg" alt="Jojo Rabbit" class="movie-logo">
             <div class="movie-info">
                 <div class="genre-tags">
                     <span class="genre-tag">Action</span>
-                    <span class="genre-tag">Satire</span>
+                    <span class="genre-tag">Adventure</span>
                     <span class="genre-tag">Drama</span>
                 </div>
                 <div class="info-item">
@@ -447,12 +598,12 @@
                 </div>
                 <div class="info-item">
                     <i class="far fa-clock"></i>
-                    <span>1h 48m</span>
+                    <span>2h 32m</span>
                 </div>
             </div>
             <p class="movie-description">
-                A young German boy in the Hitler Youth, whose hero and imaginary friend is the country's dictator, 
-                is shocked to discover that his mother is hiding a Jewish girl in their home.
+                American car designer Carroll Shelby and driver Ken Miles battle corporate interference 
+                and the laws of physics to build a revolutionary race car for Ford in order to defeat Ferrari at the 24 Hours of Le Mans in 1966.
             </p>
             <button class="book-btn">
                 Book Tickets
@@ -477,7 +628,7 @@
             
             <!-- Thumbnail with play button (initially visible) -->
             <div class="video-thumbnail" id="video-thumbnail">
-              <img src="https://i.ytimg.com/vi/tL4McUzXfFI/maxresdefault.jpg" alt="Jojo Rabbit Trailer">
+              <img src="https://i.ytimg.com/vi/liNt0DBUgQ8/hq720.jpg?sqp=-oaymwEnCNAFEJQDSFryq4qpAxkIARUAAIhCGAHYAQHiAQoIGBACGAY4AUAB&rs=AOn4CLCyf2iVCb25SD7eD4cEumJiqLH-5w" alt="Ford v Ferrari Trailer">
               <div class="play-button">
                 <i class="fas fa-play"></i>
               </div>
@@ -485,7 +636,7 @@
           </div>
         </div>
         <p class="trailer-caption">
-          Watch the official trailer for Jojo Rabbit, a satirical comedy that won the Academy Award for Best Adapted Screenplay.
+          Watch the official trailer for "Ford v Ferrari" and experience the thrilling journey of innovation, rivalry, and speed that defined an era in motorsport history.
         </p>
       </div>
     </section>
@@ -497,48 +648,116 @@
             <div class="contact-details">
                 <div class="contact-item">
                     <i class="fas fa-phone"></i>
-                    <span>+1 (555) 123-4567</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>support@filmfiesta.com</span>
+                    <span>+91 7506563517 | +91 7588305192</span>
                 </div>
             </div>
         </div>
         <p class="creation-credit">
-            Created by CSIVIT Tech Team.
+            Created by CSIVIT Tech Team
         </p>
     </footer>
 
-    <!-- Auth Modal -->
-    <div class="auth-modal-backdrop" id="auth-backdrop" aria-hidden="true">
-        <div class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
-            <div class="auth-header" id="auth-title">Sign in with Email & Password</div>
+    <div class="auth-modal-backdrop" id="auth-backdrop">
+        <div class="auth-modal">
+            <!-- Toggle Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="signin-tab">Sign In</button>
+                <button class="auth-tab" id="signup-tab">Sign Up</button>
+            </div>
+            
             <div class="auth-body">
-                <div id="step-auth">
+                <!-- Sign In Form -->
+                <div class="auth-form active" id="signin-form">
                     <div class="auth-field">
-                        <label for="auth-email">Email</label>
-                        <input id="auth-email" type="email" placeholder="you@gmail.com" pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$" title="Please enter a valid Gmail address (e.g., you@gmail.com)" required>
+                        <label for="signin-email">
+                            <i class="fas fa-envelope" style="margin-right: 4px;"></i>
+                            Email
+                        </label>
+                        <input 
+                            id="signin-email" 
+                            type="email" 
+                            placeholder="you@gmail.com"
+                            autocomplete="email"
+                            required>
                     </div>
                     <div class="auth-field">
-                        <label for="auth-password">Password</label>
-                        <input id="auth-password" type="password" placeholder="Your password" minlength="6" required>
+                        <label for="signin-password">
+                            <i class="fas fa-lock" style="margin-right: 4px;"></i>
+                            Password
+                        </label>
+                        <input 
+                            id="signin-password" 
+                            type="password" 
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required>
                     </div>
-                    <div class="auth-field">
-                        <label for="auth-name">Full Name</label>
-                        <input id="auth-name" type="text" placeholder="Your full name" required>
-                    </div>
-                    <div class="auth-field">
-                        <label for="auth-phone">Mobile Phone</label>
-                        <input id="auth-phone" type="tel" placeholder="e.g. +91XXXXXXXXXX or 9876543210" pattern="^[+]?\d{8,15}$|^\d{8,15}$" required>
-                    </div>
+                    <div class="auth-message" id="signin-message"></div>
                     <div class="auth-actions">
-                        <button class="auth-primary" id="signup-btn">Sign Up</button>
-                        <button class="auth-secondary" id="login-btn">Login</button>
-                        <button class="auth-secondary" id="auth-cancel-btn">Cancel</button>
+                        <button class="auth-primary" id="signin-submit">Sign In</button>
+                        <button class="auth-secondary" id="signin-cancel">Cancel</button>
                     </div>
-                    <div class="auth-success" id="auth-info" style="display:none;"></div>
-                    <div class="auth-error" id="auth-error" style="display:none;"></div>
+                </div>
+                
+                <!-- Sign Up Form -->
+                <div class="auth-form" id="signup-form">
+                    <div class="auth-field">
+                        <label for="signup-name">
+                            <i class="fas fa-user" style="margin-right: 4px;"></i>
+                            Full Name
+                        </label>
+                        <input 
+                            id="signup-name" 
+                            type="text" 
+                            placeholder="Raju Rastogi"
+                            autocomplete="name"
+                            required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signup-email">
+                            <i class="fas fa-envelope" style="margin-right: 4px;"></i>
+                            Email
+                        </label>
+                        <input 
+                            id="signup-email" 
+                            type="email" 
+                            placeholder="you@gmail.com"
+                            pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+                            title="Please enter a valid Gmail address"
+                            autocomplete="email"
+                            required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signup-phone">
+                            <i class="fas fa-phone" style="margin-right: 4px;"></i>
+                            Mobile Phone
+                        </label>
+                        <input 
+                            id="signup-phone" 
+                            type="tel" 
+                            placeholder="+91 XXXXX XXXXX"
+                            pattern="^[+]?\d{8,15}$|^\d{8,15}$"
+                            autocomplete="tel"
+                            required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="signup-password">
+                            <i class="fas fa-lock" style="margin-right: 4px;"></i>
+                            Password
+                        </label>
+                        <input 
+                            id="signup-password" 
+                            type="password" 
+                            placeholder="Create a strong password"
+                            minlength="6"
+                            autocomplete="new-password"
+                            required>
+                    </div>
+                    <div class="auth-message" id="signup-message"></div>
+                    <div class="auth-actions">
+                        <button class="auth-primary" id="signup-submit">Create Account</button>
+                        <button class="auth-secondary" id="signup-cancel">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -551,6 +770,7 @@
         const toastRoot = document.createElement('div');
         toastRoot.className = 'toast-container';
         document.body.appendChild(toastRoot);
+
         function showToast(message, type = 'success', timeoutMs = 2400) {
             const el = document.createElement('div');
             el.className = `toast ${type}`;
@@ -581,16 +801,28 @@
         // Elements
         const authBtn = document.getElementById('auth-btn');
         const backdrop = document.getElementById('auth-backdrop');
-        // Auth modal elements
-        const emailInput = document.getElementById('auth-email');
-        const passwordInput = document.getElementById('auth-password');
-        const nameInput = document.getElementById('auth-name');
-        const phoneInput = document.getElementById('auth-phone');
-        const signupBtn = document.getElementById('signup-btn');
-        const loginBtn = document.getElementById('login-btn');
-        const cancelBtn = document.getElementById('auth-cancel-btn');
-        const authError = document.getElementById('auth-error');
-        const authInfo = document.getElementById('auth-info');
+        
+        // Tab elements
+        const signinTab = document.getElementById('signin-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const signinForm = document.getElementById('signin-form');
+        const signupForm = document.getElementById('signup-form');
+        
+        // Sign In form elements
+        const signinEmail = document.getElementById('signin-email');
+        const signinPassword = document.getElementById('signin-password');
+        const signinSubmit = document.getElementById('signin-submit');
+        const signinCancel = document.getElementById('signin-cancel');
+        const signinMessage = document.getElementById('signin-message');
+        
+        // Sign Up form elements
+        const signupName = document.getElementById('signup-name');
+        const signupEmail = document.getElementById('signup-email');
+        const signupPhone = document.getElementById('signup-phone');
+        const signupPassword = document.getElementById('signup-password');
+        const signupSubmit = document.getElementById('signup-submit');
+        const signupCancel = document.getElementById('signup-cancel');
+        const signupMessage = document.getElementById('signup-message');
 
         let pendingBook = false; // used only to redirect to booking.html after auth
 
@@ -599,18 +831,62 @@
             window.location.href = 'index.html';
         });
 
-        function openAuth() {
-            backdrop.classList.add('show');
-            authError.style.display = 'none';
-            authInfo.style.display = 'none';
+        // Tab switching
+        signinTab.addEventListener('click', () => {
+            signinTab.classList.add('active');
+            signupTab.classList.remove('active');
+            signinForm.classList.add('active');
+            signupForm.classList.remove('active');
+            clearMessages();
+        });
+        
+        signupTab.addEventListener('click', () => {
+            signupTab.classList.add('active');
+            signinTab.classList.remove('active');
+            signupForm.classList.add('active');
+            signinForm.classList.remove('active');
+            clearMessages();
+        });
+
+        function clearMessages() {
+            signinMessage.classList.remove('show', 'error', 'success');
+            signupMessage.classList.remove('show', 'error', 'success');
         }
+
+        function showMessage(element, message, type) {
+            element.textContent = message;
+            element.className = `auth-message ${type} show`;
+        }
+
+        function openAuth(defaultTab = 'signin') {
+            backdrop.classList.add('show');
+            clearMessages();
+            if (defaultTab === 'signup') {
+                signupTab.click();
+            } else {
+                signinTab.click();
+            }
+        }
+
         function closeAuth() {
             backdrop.classList.remove('show');
-            emailInput.value = '';
-            passwordInput.value = '';
-            nameInput.value = '';
-            phoneInput.value = '';
+            // Clear all inputs
+            signinEmail.value = '';
+            signinPassword.value = '';
+            signupName.value = '';
+            signupEmail.value = '';
+            signupPhone.value = '';
+            signupPassword.value = '';
+            clearMessages();
         }
+
+        // Close modal when clicking backdrop
+        backdrop.addEventListener('click', (e) => {
+            if (e.target === backdrop) {
+                closeAuth();
+            }
+        });
+
 
         function getLocalProfile() {
             try { return JSON.parse(localStorage.getItem('ff_user')) || null; } catch { return null; }
@@ -635,135 +911,168 @@
             authBtn.onclick = async () => {
                 await supabase.auth.signOut();
                 localStorage.removeItem('ff_user');
+                showToast('Signed out successfully', 'success');
                 await renderProfileIfLoggedIn();
             };
         }
 
-        authBtn.addEventListener('click', openAuth);
-        cancelBtn.addEventListener('click', closeAuth);
-
-        async function insertProfileBookingRowOnce() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const local = getLocalProfile() || {};
-            const full_name = local.name || '';
-            const email = local.email || user.email || '';
-            const phone = local.phone || '';
-            try {
-                // Skip if a row already exists for this user
-                const { data: existing, error: selectError } = await supabase
-                    .from('booking')
-                    .select('id')
-                    .eq('user_id', user.id)
-                    .limit(1);
-                if (selectError) throw selectError;
-                if (existing && existing.length > 0) {
-                    console.log('Profile booking row already exists, skipping insert');
-                    return;
-                }
-                const { error } = await supabase.from('booking').insert([{ user_id: user.id, full_name, email, phone, movie: 'Jojo Rabbit' }]);
-                if (error) throw error;
-                console.log('Profile booking row inserted');
-            } catch (e) {
-                console.warn('Profile booking insert failed:', e?.message || e);
-            }
-        }
-
-        signupBtn.addEventListener('click', async () => {
-            authError.style.display = 'none';
-            authInfo.style.display = 'none';
-            const email = (emailInput.value || '').trim();
-            const password = (passwordInput.value || '').trim();
-            const name = (nameInput.value || '').trim();
-            const phone = (phoneInput.value || '').trim();
-            if (!email || !password || !name || !phone) {
-                showToast('Email, password, full name, and mobile phone are required', 'error');
-                return;
-            }
-            try {
-                const { data, error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: { data: { name, phone } }
-                });
-                if (error) throw error;
-                // If email confirmations are enabled, there may be no active session
-                const { data: afterSignup } = await supabase.auth.getUser();
-                if (!afterSignup || !afterSignup.user) {
-                    showToast('Account created. Please verify your email or disable confirmations in Supabase.', 'success');
-                    return;
-                }
-                setLocalProfile({ email, name, phone });
-                showToast('Account created and signed in.', 'success');
-                await renderProfileIfLoggedIn();
-                // Do not insert into booking at signup; booking happens only when selecting a seat
-                closeAuth();
-                if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
-            } catch (e) {
-                showToast(e.message || 'Failed to sign up', 'error');
-            }
-        });
-
-        loginBtn.addEventListener('click', async () => {
-            authError.style.display = 'none';
-            authInfo.style.display = 'none';
-            const email = (emailInput.value || '').trim();
-            const password = (passwordInput.value || '').trim();
-            const name = (nameInput.value || '').trim();
-            const phone = (phoneInput.value || '').trim();
+        // Sign In handler
+        signinSubmit.addEventListener('click', async () => {
+            clearMessages();
+            const email = (signinEmail.value || '').trim();
+            const password = (signinPassword.value || '').trim();
+            
             if (!email || !password) {
-                showToast('Email and password are required', 'error');
+                showMessage(signinMessage, 'Please enter both email and password', 'error');
                 return;
             }
+            
             try {
+                signinSubmit.disabled = true;
+                signinSubmit.textContent = 'Signing in...';
+                
                 const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                // Optionally update missing metadata
-                await supabase.auth.updateUser({ data: { name: name || undefined, phone: phone || undefined } });
+                
                 const { data: afterLogin } = await supabase.auth.getUser();
                 if (!afterLogin || !afterLogin.user) {
-                    showToast('Login succeeded but no session found. Check auth settings.', 'error');
+                    showMessage(signinMessage, 'Login succeeded but no session found', 'error');
                     return;
                 }
-                setLocalProfile({ email, name, phone });
+                
+                // Get user metadata from profile if available
+                const metadata = afterLogin.user.user_metadata || {};
+                setLocalProfile({ 
+                    email, 
+                    name: metadata.name || '', 
+                    phone: metadata.phone || '' 
+                });
+                
+                showToast('Welcome back!', 'success');
                 await renderProfileIfLoggedIn();
-                if (email.toLowerCase() === 'admin@gmail.com' && password === '123456') {
+                
+                // Check for admin
+                if (email.toLowerCase() === 'csiadmins@gmail.com' && password === 'FordvFerrari20') {
                     closeAuth();
                     window.location.href = 'admin.html';
                     return;
                 }
-                // Do not insert on login; only at signup
+                
                 closeAuth();
-                if (pendingBook) { pendingBook = false; window.location.href = 'booking.html'; }
+                if (pendingBook) {
+                    pendingBook = false;
+                    window.location.href = 'booking.html';
+                }
             } catch (e) {
-                showToast(e.message || 'Failed to login', 'error');
+                showMessage(signinMessage, e.message || 'Failed to sign in', 'error');
+            } finally {
+                signinSubmit.disabled = false;
+                signinSubmit.textContent = 'Sign In';
             }
         });
 
-        // Initial state
-        renderProfileIfLoggedIn();
+        // Sign Up handler
+        signupSubmit.addEventListener('click', async () => {
+            clearMessages();
+            const email = (signupEmail.value || '').trim();
+            const password = (signupPassword.value || '').trim();
+            const name = (signupName.value || '').trim();
+            const phone = (signupPhone.value || '').trim();
+            
+            if (!email || !password || !name || !phone) {
+                showMessage(signupMessage, 'Please fill in all fields', 'error');
+                return;
+            }
+            
+            if (!email.endsWith('@gmail.com')) {
+                showMessage(signupMessage, 'Please use a Gmail address', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage(signupMessage, 'Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            try {
+                signupSubmit.disabled = true;
+                signupSubmit.textContent = 'Creating account...';
+                
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: { 
+                        data: { name, phone } 
+                    }
+                });
+                
+                if (error) throw error;
+                
+                // Check if email confirmation is required
+                const { data: afterSignup } = await supabase.auth.getUser();
+                if (!afterSignup || !afterSignup.user) {
+                    showMessage(signupMessage, 'Account created! Please check your email to verify your account.', 'success');
+                    setTimeout(() => {
+                        signinTab.click();
+                    }, 3000);
+                    return;
+                }
+                
+                setLocalProfile({ email, name, phone });
+                showToast('Account created successfully!', 'success');
+                await renderProfileIfLoggedIn();
+                closeAuth();
+                
+                if (pendingBook) {
+                    pendingBook = false;
+                    window.location.href = 'booking.html';
+                }
+            } catch (e) {
+                showMessage(signupMessage, e.message || 'Failed to create account', 'error');
+            } finally {
+                signupSubmit.disabled = false;
+                signupSubmit.textContent = 'Create Account';
+            }
+        });
 
-        // No DB insert on this page. Only redirect to the seat booking page
+        // Cancel buttons
+        signinCancel.addEventListener('click', closeAuth);
+        signupCancel.addEventListener('click', closeAuth);
 
+        // Auth button click
+        authBtn.addEventListener('click', () => {
+            const { data: { user } } = supabase.auth.getUser().then(({ data: { user } }) => {
+                if (!user) {
+                    openAuth('signin');
+                }
+            });
+        });
+
+        // Book button
         document.querySelector('.book-btn').addEventListener('click', async function() {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { pendingBook = true; openAuth(); return; }
+            if (!user) {
+                pendingBook = true;
+                openAuth('signin');
+                showToast('Please sign in to book tickets', 'error');
+                return;
+            }
             window.location.href = 'booking.html';
         });
 
         // YouTube video functionality
         document.getElementById('video-thumbnail').addEventListener('click', function() {
-          const videoId = 'tL4McUzXfFI'; // Your YouTube video ID
-          const iframe = document.getElementById('youtube-video');
-          const thumbnail = document.getElementById('video-thumbnail');
-        
-          // Set the iframe source to autoplay the video
-          iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        
-          // Show the iframe and hide the thumbnail
-          iframe.style.display = 'block';
-          thumbnail.style.display = 'none';
+            const videoId = 'liNt0DBUgQ8';
+            const iframe = document.getElementById('youtube-video');
+            const thumbnail = document.getElementById('video-thumbnail');
+            
+            iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            iframe.style.display = 'block';
+            thumbnail.style.display = 'none';
         });
+
+        // Initial state
+        renderProfileIfLoggedIn();
     </script>
 </body>
 </html>

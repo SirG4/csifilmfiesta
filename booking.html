@@ -17,7 +17,7 @@
         body {
             color: #fff;
             overflow-x: hidden;
-            background-color: #000;
+            background-color: #2c2c2c;
         }
 
         /* Navbar Styles */
@@ -32,7 +32,7 @@
             align-items: center;
             z-index: 1000;
             transition: background-color 0.3s ease;
-            background-color: rgba(0, 0, 0, 0.85);
+            background-color: rgba(44, 44, 44, 0.85);
         }
 
         .logo {
@@ -180,7 +180,7 @@
             height: 30px;
             border: none;
             border-radius: 5px;
-            background-color: #333;
+            background-color: #535252;
             color: white;
             cursor: pointer;
             transition: all 0.2s;
@@ -226,7 +226,7 @@
         }
 
         .available-sample {
-            background-color: #333;
+            background-color: #535252;
         }
 
         .selected-sample {
@@ -287,7 +287,7 @@
 
         /* Footer Styles */
         footer {
-            background-color: #0c0c0c;
+            background: linear-gradient(180deg, #2c2c2c, #000);
             padding: 40px 5%;
             text-align: center;
         }
@@ -371,6 +371,7 @@
             
             .contact-details {
                 flex-direction: column;
+                align-items: center;
                 gap: 15px;
             }
         }
@@ -387,8 +388,8 @@
     <div class="booking-container">
         <!-- Movie Details Section -->
         <div class="movie-details">
-            <img src="assets/poster.jpg" alt="Jojo Rabbit" class="movie-poster">
-            <h2 class="movie-title">Jojo Rabbit</h2>
+            <img src="assets/ford_poster.jpg" alt="Ford v Ferrari" class="movie-poster">
+            <h2 class="movie-title">Ford v Ferrari</h2>
             <div class="movie-info">
                 <div class="info-item">
                     <i class="far fa-calendar-alt"></i>
@@ -396,11 +397,11 @@
                 </div>
                 <div class="info-item">
                     <i class="far fa-clock"></i>
-                    <span>1h 48m</span>
+                    <span>2h 32m</span>
                 </div>
                 <div class="info-item">
                     <i class="fas fa-ticket-alt"></i>
-                    <span>Satire, Comedy, Drama</span>
+                    <span>Action, Adventure, Drama</span>
                 </div>
             </div>
             <div class="genre-tags">
@@ -409,8 +410,8 @@
                 <span class="genre-tag">Drama</span>
             </div>
             <p class="movie-description">
-                A young German boy in the Hitler Youth, whose hero and imaginary friend is the country's dictator, 
-                is shocked to discover that his mother is hiding a Jewish girl in their home.
+                American car designer Carroll Shelby and driver Ken Miles battle corporate interference 
+                and the laws of physics to build a revolutionary race car for Ford in order to defeat Ferrari at the 24 Hours of Le Mans in 1966.
             </p>
         </div>
 
@@ -459,16 +460,12 @@
             <div class="contact-details">
                 <div class="contact-item">
                     <i class="fas fa-phone"></i>
-                    <span>ADD CONTACT</span>
-                </div>
-                <div class="contact-item">
-                    <i class="fas fa-envelope"></i>
-                    <span>ADD EMAIL</span>
+                    <span>+91 7506563517 | +91 7588305192</span>
                 </div>
             </div>
         </div>
         <p class="creation-credit">
-            Created by CSIVIT Tech Team.
+            Created by CSIVIT Tech Team
         </p>
     </footer>
 
@@ -521,19 +518,22 @@
             const phone = (user && user.phone) || (local && local.phone) || '';
             const email = (user && user.user_metadata && user.user_metadata.email) || (local && local.email) || '';
             const name = (local && local.name) || '';
-            const avatarUrl = (local && local.avatarUrl) || 'assets/profile.png';
-            authBtn.innerHTML = `<img src="${avatarUrl}" alt="pfp" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;border:1px solid #333;"/><span style="margin-right:8px;">${name || email || phone}</span><span style="opacity:.8;">Sign out</span>`;
+            authBtn.innerHTML = `<span style="margin-right:8px;">${name || email || phone}</span><span style="opacity:.8;">Sign out</span>`;
             authBtn.onclick = async () => {
                 await supabase.auth.signOut();
                 localStorage.removeItem('ff_user');
-                await renderProfile();
+                showToast('Logged out successfully', 'success', 1000);
+                // Redirect after showing toast
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
             };
         }
         renderProfile();
 
         // Configurable seat map
         const seatMap = document.getElementById('seat-map');
-        const MOVIE_ID = 'Jojo Rabbit';
+        const MOVIE_ID = 'Ford v Ferrari'; // must match index.html
         const NUM_ROWS = 9; // scalable: increase to add more rows
         const NUM_COLS = 17; // scalable: increase to add more columns
 
@@ -734,6 +734,7 @@
                 if (upsertError) throw upsertError;
 
                 showToast('🎉 Booking saved!', 'success');
+                showToast('🏮We can\'t keep your reserved seat after 4:00pm', 'info');
                 await loadOccupiedSeats();
             } catch (e) {
                 console.error('Booking insert failed:', e);
