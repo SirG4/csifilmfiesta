@@ -789,7 +789,7 @@
                 if (upsertError) throw upsertError;
 
                 showToast('🎉 Booking saved!', 'success');
-                showToast('🏮We can\'t keep your reserved seat after 4:00pm', 'info', 10000);
+                showToast('🏮We can\'t keep your reserved seat after 4:00pm', 'info');
                 await loadOccupiedSeats();
             } catch (e) {
                 console.error('Booking insert failed:', e);
