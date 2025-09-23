@@ -203,6 +203,11 @@
             cursor: not-allowed;
         } 
 
+        .empty-cell {
+            width: 30px;
+            height: 30px;
+        }
+
         .seat-info {
             display: flex;
             justify-content: center;
@@ -534,15 +539,46 @@
         // Configurable seat map
         const seatMap = document.getElementById('seat-map');
         const MOVIE_ID = 'Ford v Ferrari'; // must match index.html
-        const NUM_ROWS = 9; // scalable: increase to add more rows
         const NUM_COLS = 17; // scalable: increase to add more columns
 
-        function rowLabels(n) { return Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i)); }
-        const rows = rowLabels(NUM_ROWS);
+        function rowLabels(n, start = 0) { 
+            return Array.from({ length: n }, (_, i) => String.fromCharCode(65 + i + start)); 
+        }
+
+        function createRowLabel(row) {
+            const div = document.createElement('div');
+            div.className = 'row-label';
+            div.textContent = row;
+            return div;
+        }
+
+        function createSeat(row, col) {
+            const seat = document.createElement('button');
+            seat.className = 'seat';
+            seat.dataset.row = row;
+            seat.dataset.col = col;
+            seat.dataset.seat = `${row}${col}`;
+            seat.textContent = col;
+            seat.addEventListener('click', toggleSeatSelection);
+            return seat;
+        }
+
+        function createEmptyCell() {
+            const div = document.createElement('div');
+            div.className = 'empty-cell';
+            return div;
+        }
+
+        function addSpacerRow() {
+            seatMap.appendChild(createEmptyCell()); // for row label
+            for (let c = 1; c <= NUM_COLS; c++) {
+                seatMap.appendChild(createEmptyCell());
+            }
+        }
 
         function buildSeatMap() {
             seatMap.innerHTML = '';
-            // column header
+            // Column headers
             const emptyCell = document.createElement('div');
             emptyCell.className = 'row-label';
             emptyCell.textContent = '';
@@ -553,23 +589,40 @@
                 colLabel.textContent = c;
                 seatMap.appendChild(colLabel);
             }
-            // rows
-            for (let r = 0; r < rows.length; r++) {
-                const rowLabel = document.createElement('div');
-                rowLabel.className = 'row-label';
-                rowLabel.textContent = rows[r];
-                seatMap.appendChild(rowLabel);
-                for (let c = 1; c <= NUM_COLS; c++) {
-                    const seat = document.createElement('button');
-                    seat.className = 'seat';
-                    seat.dataset.row = rows[r];
-                    seat.dataset.col = c;
-                    seat.dataset.seat = `${rows[r]}${c}`;
-                    seat.textContent = c;
-                    seat.addEventListener('click', toggleSeatSelection);
-                    seatMap.appendChild(seat);
+            // Block 1: 9 rows, 17 columns (A-I)
+            const block1Rows = rowLabels(9);
+            block1Rows.forEach(row => {
+                seatMap.appendChild(createRowLabel(row));
+                for (let c = 1; c <= 17; c++) {
+                    seatMap.appendChild(createSeat(row, c));
                 }
-            }
+            });
+            // Spacer between block 1 and middle blocks
+            addSpacerRow();
+            // Block 2 and 3: 6 rows, left 5 cols (1-5), right 5 cols (13-17) (J-O)
+            const middleRows = rowLabels(6, 9);
+            middleRows.forEach(row => {
+                seatMap.appendChild(createRowLabel(row));
+                for (let c = 1; c <= 5; c++) {
+                    seatMap.appendChild(createSeat(row, c));
+                }
+                for (let i = 0; i < 7; i++) {
+                    seatMap.appendChild(createEmptyCell());
+                }
+                for (let c = 13; c <= 17; c++) {
+                    seatMap.appendChild(createSeat(row, c));
+                }
+            });
+            // Spacer between middle blocks and block 4
+            addSpacerRow();
+            // Block 4: 3 rows, 17 columns (P-R)
+            const block4Rows = rowLabels(3, 15);
+            block4Rows.forEach(row => {
+                seatMap.appendChild(createRowLabel(row));
+                for (let c = 1; c <= 17; c++) {
+                    seatMap.appendChild(createSeat(row, c));
+                }
+            });
         }
         buildSeatMap();
         
@@ -658,13 +711,15 @@
                         document.querySelectorAll('.seat').forEach(b => {
                             if (b.dataset.seat !== mySeat) { b.disabled = true; }
                         });
-                        updateAnalytics(NUM_ROWS * NUM_COLS, taken.size, (NUM_ROWS * NUM_COLS) - taken.size, mySeat);
+                        const totalSeats = document.querySelectorAll('.seat').length;
+                        updateAnalytics(totalSeats, taken.size, totalSeats - taken.size, mySeat);
                         updateOccupiedList(takenList.sort());
                         updateBookingSummary();
                         return;
                     }
                 }
-                updateAnalytics(NUM_ROWS * NUM_COLS, taken.size, (NUM_ROWS * NUM_COLS) - taken.size, null);
+                const totalSeats = document.querySelectorAll('.seat').length;
+                updateAnalytics(totalSeats, taken.size, totalSeats - taken.size, null);
                 updateOccupiedList(takenList.sort());
                 updateBookingSummary();
             } catch (e) {
@@ -734,12 +789,19 @@
                 if (upsertError) throw upsertError;
 
                 showToast('🎉 Booking saved!', 'success');
-                showToast('🏮We can\'t keep your reserved seat after 4:00pm', 'info');
+                showToast('🏮We can\'t keep your reserved seat after 4:00pm', 'info', 10000);
                 await loadOccupiedSeats();
             } catch (e) {
                 console.error('Booking insert failed:', e);
                 let hint = '';
                 const msg = (e.message || '').toLowerCase();
+                if (msg.includes('permission') || msg.includes('rls')) {
+                    hint = '\nHint: Ensure an INSERT policy exists on table booking with check auth.uid() = user_id.';
+                } else if (msg.includes('not found') || msg.includes('schema') || msg.includes('cache')) {
+                    hint = '\nHint: Ensure table public.booking exists and schema cache refreshed.';
+                } else if (msg.includes('column') && msg.includes('seat')) {
+                    hint = '\nHint: Add column seat_no text to the booking table.';
+                }
                 showToast('Failed to save booking: ' + (e.message || 'Unknown error') + hint, 'error');
             }
         });
