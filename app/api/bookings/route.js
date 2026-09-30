@@ -3,10 +3,24 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import { connectDB } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
+import Settings from '@/models/Settings';
 
 const MOVIE_ID = 'Ford v Ferrari';
 
-// GET: return public seat state for a movie (list of occupied seats + your seat if signed in)
+// Row letters A..I (front block) vs J..R (back — middle + rear blocks).
+// A seat like "K12" -> row letter "K".
+function isBackRow(seatNo) {
+  const letter = (seatNo || '').match(/^[A-Z]/)?.[0];
+  if (!letter) return false;
+  return letter >= 'J' && letter <= 'R';
+}
+
+async function getBackRowsOpen(movie) {
+  const s = await Settings.findOne({ movie }).lean();
+  return !!s?.backRowsOpen;
+}
+
+// GET: seat state for a movie — occupied list, your seat, and whether back rows are open
 export async function GET(req) {
   await connectDB();
   const { searchParams } = new URL(req.url);
@@ -20,11 +34,14 @@ export async function GET(req) {
     session?.user?.id &&
     rows.find((r) => r.userId === session.user.id)?.seatNo;
 
+  const backRowsOpen = await getBackRowsOpen(movie);
+
   return NextResponse.json({
     movie,
     total: occupied.length,
     occupied,
-    mySeat: mySeat || null
+    mySeat: mySeat || null,
+    backRowsOpen
   });
 }
 
@@ -43,6 +60,17 @@ export async function POST(req) {
   }
 
   await connectDB();
+
+  // Enforce back-rows lock server-side too — clients can't just POST past the UI.
+  if (isBackRow(seatNo)) {
+    const open = await getBackRowsOpen(movie);
+    if (!open) {
+      return NextResponse.json(
+        { error: 'Rows J–R are not open yet. Please pick a seat in rows A–I.' },
+        { status: 403 }
+      );
+    }
+  }
 
   // Block if this user already has a seat for this movie
   const existing = await Booking.findOne({
@@ -79,7 +107,6 @@ export async function POST(req) {
     });
     return NextResponse.json({ ok: true, id: doc._id.toString(), seatNo });
   } catch (e) {
-    // unique index violation
     if (e && e.code === 11000) {
       return NextResponse.json(
         { error: 'Seat already booked (race). Try another seat.' },

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import Ticket from '../components/Ticket';
 import { useToast } from '../components/Toast';
 
 const MOVIE_ID = 'Ford v Ferrari';
@@ -54,17 +55,14 @@ export default function BookingPage() {
   const router = useRouter();
   const { show } = useToast();
 
-  const layout = useMemo(buildLayout, []);
-  const totalSeats = useMemo(
-    () => layout.reduce((n, r) => n + r.cells.filter((c) => c.kind === 'seat').length, 0),
-    [layout]
-  );
+  const fullLayout = useMemo(buildLayout, []);
 
   const [occupied, setOccupied] = useState(new Set());
   const [mySeat, setMySeat] = useState(null);
   const [selected, setSelected] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [authKey, setAuthKey] = useState(0);
+  const [backRowsOpen, setBackRowsOpen] = useState(true);
 
   const loadSeats = useCallback(async () => {
     try {
@@ -74,11 +72,41 @@ export default function BookingPage() {
       const json = await res.json();
       setOccupied(new Set(json.occupied || []));
       setMySeat(json.mySeat || null);
+      setBackRowsOpen(!!json.backRowsOpen);
       if (json.mySeat) setSelected(json.mySeat);
     } catch (e) {
       console.warn('Failed to load seats', e);
     }
   }, []);
+
+  const isBackRow = (row) => row && row >= 'J' && row <= 'R';
+
+  // When the admin has NOT opened rows J-R, drop them (and their spacer)
+  // from the visible layout entirely — the user only sees A-I.
+  const layout = useMemo(() => {
+    if (backRowsOpen) return fullLayout;
+    return fullLayout.filter((r) => {
+      if (r.row === '_gap1' || r.row === '_gap2') return false;
+      const first = r.row.charAt(0);
+      return first >= 'A' && first <= 'I';
+    });
+  }, [fullLayout, backRowsOpen]);
+
+  const totalSeats = useMemo(
+    () => layout.reduce((n, r) => n + r.cells.filter((c) => c.kind === 'seat').length, 0),
+    [layout]
+  );
+
+  // Only count occupied seats that fall inside the currently visible block.
+  const visibleBooked = useMemo(() => {
+    if (backRowsOpen) return occupied.size;
+    let n = 0;
+    for (const code of occupied) {
+      const letter = code.charAt(0);
+      if (letter >= 'A' && letter <= 'I') n++;
+    }
+    return n;
+  }, [occupied, backRowsOpen]);
 
   useEffect(() => {
     loadSeats();
@@ -132,40 +160,51 @@ export default function BookingPage() {
       <div className="body-booking" style={{ minHeight: '100vh' }}>
         <Navbar solid scrollAware={false} openAuthKey={authKey} />
 
+        {mySeat && (
+          <div className="ticket-wrap">
+            <Ticket
+              name={session?.user?.name || session?.user?.email || 'Guest'}
+              email={session?.user?.email}
+              seat={mySeat}
+              movie="Project Hail Mary"
+            />
+          </div>
+        )}
+
         <div className="booking-container">
           {/* movie details */}
           <div className="movie-details">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/ford_poster.jpg"
-              alt="Ford v Ferrari"
+              src="/assets/image.png"
+              alt="Project Hail Mary"
               className="movie-poster"
             />
-            <h2 className="movie-title">Ford v Ferrari</h2>
+            <h2 className="movie-title">Project Hail Mary</h2>
             <div className="movie-info booking">
               <div className="info-item">
                 <i className="far fa-calendar-alt" />
-                <span>2019</span>
+                <span>21 Oct 2026</span>
               </div>
               <div className="info-item">
                 <i className="far fa-clock" />
-                <span>2h 32m</span>
+                <span>2h 22m</span>
               </div>
               <div className="info-item">
                 <i className="fas fa-ticket-alt" />
-                <span>Action, Adventure, Drama</span>
+                <span>Sci-Fi, Drama, Adventure</span>
               </div>
             </div>
             <div className="genre-tags booking">
-              <span className="genre-tag booking">Action</span>
-              <span className="genre-tag booking">Satire</span>
+              <span className="genre-tag booking">Sci-Fi</span>
+              <span className="genre-tag booking">Adventure</span>
               <span className="genre-tag booking">Drama</span>
             </div>
             <p className="movie-description booking">
-              American car designer Carroll Shelby and driver Ken Miles battle
-              corporate interference and the laws of physics to build a
-              revolutionary race car for Ford in order to defeat Ferrari at the
-              24 Hours of Le Mans in 1966.
+              An astronaut wakes millions of miles from Earth with no memory of
+              how he got there. His crewmates are dead, the Sun is dying, and
+              the survival of humanity rests on a single mission — and an
+              unexpected friendship forged across the void.
             </p>
           </div>
 
@@ -220,8 +259,8 @@ export default function BookingPage() {
                 {selected ? `Selected: ${selected}` : 'No seats selected'}
               </div>
               <div className="selected-seats">
-                Total: {totalSeats} | Booked: {occupied.size} | Available:{' '}
-                {totalSeats - occupied.size} |{' '}
+                Total: {totalSeats} | Booked: {visibleBooked} | Available:{' '}
+                {totalSeats - visibleBooked} |{' '}
                 {mySeat ? `Your seat: ${mySeat}` : 'Your seat: Not booked yet'}
               </div>
               <button

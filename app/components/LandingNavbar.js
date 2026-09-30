@@ -2,39 +2,29 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
-import { useToast } from './Toast';
+import { motion } from 'framer-motion';
 import AuthModal from './AuthModal';
+import { useToast } from './Toast';
 
-export default function Navbar({ solid = false, scrollAware = true, openAuthKey = 0 }) {
+/*
+ * Minimal landing bar — logo left, Login/Register right.
+ * No middle nav links.
+ * Auth flow is unchanged (same AuthModal, same signOut).
+ */
+export default function LandingNavbar({ openAuthKey = 0 }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { show } = useToast();
-  const [scrolled, setScrolled] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
-    if (!scrollAware) return;
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', onScroll);
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [scrollAware]);
-
-  // parent can force-open the modal by bumping openAuthKey
-  useEffect(() => {
     if (openAuthKey > 0) setAuthOpen(true);
   }, [openAuthKey]);
-
-  const cls =
-    'navbar' +
-    (solid ? ' solid' : '') +
-    (scrollAware && scrolled ? ' scrolled' : '');
 
   const handleAuthClick = async () => {
     if (session?.user) {
       await signOut({ redirect: false });
       show('Signed out successfully', 'success');
-      router.push('/');
       router.refresh();
     } else {
       setAuthOpen(true);
@@ -43,31 +33,41 @@ export default function Navbar({ solid = false, scrollAware = true, openAuthKey 
 
   return (
     <>
-      <nav className={cls}>
+      <motion.div
+        className="ff-topbar"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/assets/filmfiesta_logo.png"
           alt="FilmFiesta"
-          className="logo"
+          className="ff-topbar-logo"
           onClick={() => router.push('/')}
         />
-        <button className="login-btn" onClick={handleAuthClick}>
+
+        <button className="ff-topbar-login" onClick={handleAuthClick}>
           {status === 'loading' ? (
             <span>...</span>
           ) : session?.user ? (
             <>
-              {session.user.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={session.user.image} alt="" />
-              ) : null}
-              <span>{session.user.name || session.user.email}</span>
-              <span style={{ opacity: 0.8 }}>· Sign out</span>
+              <span className="ff-login-name">
+                {session.user.name?.split(' ')[0] || session.user.email}
+              </span>
+              <span className="ff-login-dot">·</span>
+              <span>SIGN OUT</span>
             </>
           ) : (
-            <span>Login</span>
+            <>
+              <span>LOGIN</span>
+              <span className="ff-login-dot">/</span>
+              <span>REGISTER</span>
+            </>
           )}
         </button>
-      </nav>
+      </motion.div>
+
       <AuthModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
